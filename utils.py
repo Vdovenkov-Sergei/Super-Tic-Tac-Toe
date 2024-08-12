@@ -14,6 +14,23 @@ def print(*args, sep=" ", end="\n"):
     old_print(*args, sep=sep, end=f"{Color.END}{end}")
 
 
+def greeting():
+    print(f"\n> Hello, guys! Let's play game called {TITLE}!")
+    info = input("> Choose matrix and enter coords (x, y) > ")
+    try:
+        x, y = map(int, info.split())
+        if not (0 <= x < SIZE and 0 <= y < SIZE):
+            raise ValueError
+        print("> Okay, nice!")
+        return x * SIZE + y
+    except ValueError:
+        print("> Your input incorrect! =(")
+        return 0
+    finally:
+        print("> Good luck! =)\n")
+
+
+TITLE = f"{Color.BLUE}'Super Tic Tac Toe'{Color.END}"
 SIZE = 3
 INDENT = "-" * (2 * SIZE**2 + 1)
 CROSS, CIRCLE = f"{Color.BLUE}X", f"{Color.RED}O"

@@ -1,6 +1,6 @@
 import os
 from copy import deepcopy
-from utils import it_step, SIZE, INDENT, COMBINATIONS, CIRCLE, print, Color
+from utils import it_step, SIZE, INDENT, COMBINATIONS, CIRCLE, print, greeting, Color
 
 BIG_CROSS = [f"{Color.BLUE}{s}{Color.END}" for s in ["\\   /", "  X  ", "/   \\"]]
 BIG_CIRCLE = [f"{Color.RED}{s}{Color.END}" for s in ["/ ‾ \\", "|   |", "\\ _ /"]]
@@ -41,8 +41,8 @@ def check_combinations(data):
 
 
 def main():
-    cur_matrix, cur_step, empty_ceils = 0, next(it_step), SIZE**4
-    
+    cur_step, empty_ceils = next(it_step), SIZE**4
+    cur_matrix = greeting()
     print_game_field(cur_step, cur_matrix)
 
     while True:
