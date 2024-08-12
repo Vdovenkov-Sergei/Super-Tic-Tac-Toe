@@ -1,6 +1,6 @@
 import os
 from copy import deepcopy
-from utils import it_step, SIZE, INDENT, COMBINATIONS, CIRCLE, print, greeting, Color
+from app.utils import it_step, SIZE, INDENT, COMBINATIONS, CIRCLE, print, greeting, Color
 
 BIG_CROSS = [f"{Color.BLUE}{s}{Color.END}" for s in ["\\   /", "  X  ", "/   \\"]]
 BIG_CIRCLE = [f"{Color.RED}{s}{Color.END}" for s in ["/ ‾ \\", "|   |", "\\ _ /"]]
