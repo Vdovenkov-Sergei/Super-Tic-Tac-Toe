@@ -1,82 +1,78 @@
-from copy import deepcopy
-from itertools import cycle, chain
 import os
+from copy import deepcopy
+from utils import it_step, SIZE, INDENT, COMBINATIONS, CIRCLE, print, Color
 
-SIZE = 3
-WIDTH = 2 * 3**2 + 1
-base_matrix = [[" "] * SIZE for _ in range(SIZE)]
-field = [deepcopy(base_matrix) for _ in range(SIZE * SIZE)]
-winner_ceil = [[" "] * SIZE for _ in range(SIZE)]
-
-CROSS, CIRCLE = f"\x1b[38;5;27mX\x1b[0m", f"\x1b[38;5;9mO\x1b[0m"
-big_cross = ["\\   /", "  X  ", "/   \\"]
-big_circle = ["/ ‾ \\", "|   |", "\\ _ /"]
-
-it_hoz = zip((x for x in range(SIZE) for _ in range(SIZE)), cycle(range(SIZE)))
-it_vert = zip(cycle(range(SIZE)), (x for x in range(SIZE) for _ in range(SIZE)))
-it_diag = zip(cycle(range(SIZE)), chain(range(SIZE), range(SIZE - 1, -1, -1)))
-horizontal = zip(it_hoz, it_hoz, it_hoz)
-vertical = zip(it_vert, it_vert, it_vert)
-diagonal = zip(it_diag, it_diag, it_diag)
-combinations = list((*horizontal, *vertical, *diagonal))
+BIG_CROSS = [f"{Color.BLUE}{s}{Color.END}" for s in ["\\   /", "  X  ", "/   \\"]]
+BIG_CIRCLE = [f"{Color.RED}{s}{Color.END}" for s in ["/ ‾ \\", "|   |", "\\ _ /"]]
+FIELD = [deepcopy([[" "] * SIZE for _ in range(SIZE)]) for _ in range(SIZE * SIZE)]
+WINNER_CEIL = [[" "] * SIZE for _ in range(SIZE)]
 
 
-def print_field():
-    print("-" * WIDTH)
+def build_row(i, j, matrix_idx):
+    total_row = "|"
+    for k in range(SIZE):
+        ceil = WINNER_CEIL[(i + k) // SIZE][(i + k) % SIZE]
+        if matrix_idx != i + k and ceil != " ":
+            total_row += (BIG_CROSS[j], BIG_CIRCLE[j])[ceil == CIRCLE] + "|"
+        else:
+            cur_row = f"{' '.join(FIELD[i + k][j])}{Color.END}"
+            if matrix_idx == i + k:
+                cur_row = f"{Color.WHITE}{cur_row}"
+            total_row += cur_row + "|"
+    return total_row
+
+
+def print_game_field(step, matrix_idx):
+    print(INDENT)
     for i in range(0, SIZE * SIZE, SIZE):
         for j in range(SIZE):
-            total_row = "|"
-            for k in range(SIZE):
-                ceil = winner_ceil[(i + k) // SIZE][(i + k) % SIZE]
-                if matrix_idx != i + k and ceil != " ":
-                    cross_row = f"\x1b[38;5;27m{big_cross[j]}\x1b[0m"
-                    circle_row = f"\x1b[38;5;9m{big_circle[j]}\x1b[0m"
-                    idx = (0, 1)[ceil.find('O') != -1]
-                    total_row += (cross_row, circle_row)[idx] + "|"
-                else:
-                    total_row += " ".join(field[i + k][j]) + "|"
-            print(total_row)
-        print("-" * WIDTH)
+            print(build_row(i, j, matrix_idx))
+        print(INDENT)
+    print(f"\nCur step: {step}")
 
 
-def check_combinations(matrix):
-    for case in combinations:
+def check_combinations(data):
+    for case in COMBINATIONS:
         p1, p2, p3 = case
         x1, y1, x2, y2, x3, y3 = *p1, *p2, *p3
-        if matrix[x1][y1] == matrix[x2][y2] == matrix[x3][y3] and matrix[x1][y1] != " ":
-            return matrix[x1][y1]
+        if data[x1][y1] == data[x2][y2] == data[x3][y3] and data[x1][y1] != " ":
+            return data[x1][y1]
     return " "
 
 
-matrix_idx, step, empty_ceils = 0, 0, SIZE**4
-print_field()
+def main():
+    cur_matrix, cur_step, empty_ceils = 0, next(it_step), SIZE**4
+    
+    print_game_field(cur_step, cur_matrix)
 
-while True:
-    info = input("\n> ")
-    os.system("cls" if os.name == "posix" else "clear")
+    while True:
+        if not empty_ceils:
+            print("Draw! =)")
+            break
+        info = input("> ")
+        if info.lower() == "stop":
+            break
+        os.system("cls" if os.name == "posix" else "clear")
 
-    try:
-        x, y = map(int, info.split())
-        if field[matrix_idx][x][y] != " ":
-            print(f"Ceil ({x}; {y}) already matched")
-        else:
-            field[matrix_idx][x][y] = (CROSS, CIRCLE)[step]
-            if winner_ceil[matrix_idx // SIZE][matrix_idx % SIZE] == " ":
-                cur_winner = check_combinations(field[matrix_idx])
-                winner_ceil[matrix_idx // SIZE][matrix_idx % SIZE] = cur_winner
-            step = (step + 1) % 2
-            matrix_idx = x * SIZE + y
-            empty_ceils -= 1
-    except ValueError:
-        print("Incorrect input")
-    except IndexError:
-        print(f"Incorrect input coords ({x}; {y})")
+        try:
+            x, y = map(int, info.split())
+            if FIELD[cur_matrix][x][y] != " ":
+                print(f"> Ceil ({x}; {y}) already matched!")
+            else:
+                FIELD[cur_matrix][x][y] = cur_step
+                if WINNER_CEIL[cur_matrix // SIZE][cur_matrix % SIZE] == " ":
+                    cur_winner = check_combinations(FIELD[cur_matrix])
+                    WINNER_CEIL[cur_matrix // SIZE][cur_matrix % SIZE] = cur_winner
+                cur_step = next(it_step)
+                cur_matrix = x * SIZE + y
+                empty_ceils -= 1
+        except ValueError:
+            print("> Incorrect input!")
+        except IndexError:
+            print(f"> Incorrect coords ({x}; {y})!")
 
-    winner = check_combinations(winner_ceil)
-    print_field()
-    if winner != " ":
-        print(f"Winner - {winner}")
-        break
-    if not empty_ceils:
-        print("Draw!")
-        break
+        winner = check_combinations(WINNER_CEIL)
+        print_game_field(cur_step, cur_matrix)
+        if winner != " ":
+            print(f"Winner is '{winner}'! =)")
+            break
